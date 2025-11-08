@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <title>Project Finance — Tailwind Frontend (Scenarios + Chart)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    details { display: none }          /* Ẩn debug mặc định */
+    body.debug details { display: block }
+    textarea { font-family: ui-monospace, SFMono-Regular, Menlo, monospace }
+    .table-wrap { overflow-x:auto }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100">
+  <!-- Header -->
+  <header class="border-b border-slate-800">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between gap-3 flex-wrap">
+      <div>
+        <h1 class="text-xl font-semibold">Project Finance — Frontend (Tailwind)</h1>
+        <p class="text-slate-400 text-sm">Kết nối <code class="text-emerald-300">same-origin (Flask/ngrok)</code> — Luồng: Project → B12 → B13 → What-if</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="toggle-debug" class="px-3 py-2 rounded-lg border border-slate-700 hover:bg-slate-800">👁 Debug: OFF</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4 py-6 space-y-6">
+    <!-- PROJECT -->
+    <section class="bg-slate-900/60 border border-slate-800 rounded-2xl p-5">
+      <div class="flex items-center justify-between">
+        <h2 class="text-lg font-semibold">1) Khởi tạo dự án — <span class="text-slate-400">/api/v1/project</span></h2>
+        <div class="flex items-center gap-2">
+          <button id="btn-sample-project" class="px-3 py-2 rounded-lg border border-amber-500/30 text-amber-300 hover:bg-amber-500/10">Điền mẫu</button>
+          <button id="btn-project" class="px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white">Gửi /project</button>
+          <span id="project-status" class="text-xs px-2 py-1 rounded-full border border-slate-700 text-slate-300">idle</span>
+        </div>
+      </div>
+
+      <div class="mt-4 grid md:grid-cols-3 gap-3">
+        <div><label class="block text-xs text-slate-400 mb-1">Capital (VND)</label><input id="capital" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2" placeholder="100000000"></div>
+        <div><label class="block text-xs text-slate-400 mb-1">% Marketing GLOBAL</label><input id="mkt_global" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2" placeholder="15"></div>
+        <div><label class="block text-xs text-slate-400 mb-1">Payback months</label><input id="payback_months" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2" placeholder="12"></div>
+      </div>
+
+      <div class="mt-3 grid md:grid-cols-3 gap-3">
+        <div><label class="block text-xs text-slate-400 mb-1">Overheads - Lương/tháng</label><input id="ov_salary" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2" placeholder="20000000"></div>
+        <div><label class="block text-xs text-slate-400 mb-1">Overheads - Cố định/tháng</label><input id="ov_fixed" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2" placeholder="10000000"></div>
+        <div><label class="block text-xs text-slate-400 mb-1">Overheads - Khác/tháng</label><input id="ov_others" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2" placeholder="5000000"></div>
+      </div>
+
+      <!-- Ranges -->
+      <div class="mt-4 grid gap-3">
+        <div class="grid md:grid-cols-12 gap-3">
+          <div class="md:col-span-4"><label class="block text-xs text-slate-400 mb-1">Range 1 — Tên</label><input id="r1_name" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2" placeholder="Cao cấp"></div>
+          <div class="md:col-span-2"><label class="block text-xs text-slate-400 mb-1">% Mix</label><input id="r1_mix" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2" placeholder="20"></div>
+          <div class="md:col-span-3"><label class="block text-xs text-slate-400 mb-1">Giá bán</label><input id="r1_price" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2" placeholder="500000"></div>
+          <div class="md:col-span-3"><label class="block text-xs text-slate-400 mb-1">COGS %</label><input id="r1_cogs" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2" placeholder="60"></div>
+        </div>
+        <div class="grid md:grid-cols-12 gap-3">
+          <div class="md:col-span-4"><label class="block text-xs text-slate-400 mb-1">Range 2 — Tên</label><input id="r2_name" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2" placeholder="Trung cấp"></div>
+          <div class="md:col-span-2"><label class="block text-xs text-slate-400 mb-1">% Mix</label><input id="r2_mix" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2" placeholder="50"></div>
+          <div class="md:col-span-3"><label class="block text-xs text-slate-400 mb-1">Giá bán</label><input id="r2_price" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2" placeholder="300000"></div>
+          <div class="md:col-span-3"><label class="block text-xs text-slate-400 mb-1">COGS %</label><input id="r2_cogs" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2" placeholder="55"></div>
+        </div>
+        <div class="grid md:grid-cols-12 gap-3">
+          <div class="md:col-span-4"><label class="block text-xs text-slate-400 mb-1">Range 3 — Tên</label><input id="r3_name" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2" placeholder="Phổ thông"></div>
+          <div class="md:col-span-2"><label class="block text-xs text-slate-400 mb-1">% Mix</label><input id="r3_mix" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2" placeholder="30"></div>
+          <div class="md:col-span-3"><label class="block text-xs text-slate-400 mb-1">Giá bán</label><input id="r3_price" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2" placeholder="150000"></div>
+          <div class="md:col-span-3"><label class="block text-xs text-slate-400 mb-1">COGS %</label><input id="r3_cogs" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2" placeholder="50"></div>
+        </div>
+      </div>
+
+      <div id="project-result" class="mt-5"></div>
+
+      <details class="mt-4">
+        <summary class="cursor-pointer text-emerald-300">JSON request/response</summary>
+        <div class="grid md:grid-cols-2 gap-3 mt-3">
+          <div><p class="text-xs text-slate-400 mb-1">Request JSON</p><textarea id="project-req" readonly class="w-full h-40 bg-slate-950 border border-slate-800 rounded-xl p-3"></textarea></div>
+          <div><p class="text-xs text-slate-400 mb-1">Response JSON</p><textarea id="project-resp" readonly class="w-full h-40 bg-slate-950 border border-slate-800 rounded-xl p-3"></textarea></div>
+        </div>
+      </details>
+    </section>
+
+    <!-- B12 -->
+    <section class="bg-slate-900/60 border border-slate-800 rounded-2xl p-5">
+      <div class="flex items-center justify-between">
+        <h2 class="text-lg font-semibold">2) Bước 12 — <span class="text-slate-400">/api/v1/b12</span></h2>
+        <div class="flex items-center gap-2">
+          <button id="btn-b12" class="px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white">Gửi /b12</button>
+          <span id="b12-status" class="text-xs px-2 py-1 rounded-full border border-slate-700 text-slate-300">idle</span>
+        </div>
+      </div>
+
+      <div class="mt-3 grid md:grid-cols-3 gap-3">
+        <div><label class="block text-xs text-slate-400 mb-1">Sản lượng — Range 1</label><input id="u1" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2" placeholder="100"></div>
+        <div><label class="block text-xs text-slate-400 mb-1">Sản lượng — Range 2</label><input id="u2" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2" placeholder="300"></div>
+        <div><label class="block text-xs text-slate-400 mb-1">Sản lượng — Range 3</label><input id="u3" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2" placeholder="400"></div>
+      </div>
+
+      <div id="b12-result" class="mt-4"></div>
+
+      <details class="mt-4">
+        <summary class="cursor-pointer text-emerald-300">JSON request/response</summary>
+        <div class="grid md:grid-cols-2 gap-3 mt-3">
+          <div><p class="text-xs text-slate-400 mb-1">Request JSON</p><textarea id="b12-req" readonly class="w-full h-40 bg-slate-950 border border-slate-800 rounded-xl p-3"></textarea></div>
+          <div><p class="text-xs text-slate-400 mb-1">Response JSON</p><textarea id="b12-resp" readonly class="w-full h-40 bg-slate-950 border border-slate-800 rounded-xl p-3"></textarea></div>
+        </div>
+      </details>
+    </section>
+
+    <!-- B13 -->
+    <section class="bg-slate-900/60 border border-slate-800 rounded-2xl p-5">
+      <div class="flex items-center justify-between">
+        <h2 class="text-lg font-semibold">3) Bước 13 — <span class="text-slate-400">/api/v1/b13</span></h2>
+        <div class="flex items-center gap-2">
+          <button id="btn-b13" class="px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white">Gửi /b13</button>
+          <span id="b13-status" class="text-xs px-2 py-1 rounded-full border border-slate-700 text-slate-300">idle</span>
+        </div>
+      </div>
+
+      <div id="b13-result" class="mt-4"></div>
+
+      <details class="mt-4">
+        <summary class="cursor-pointer text-emerald-300">JSON request/response</summary>
+        <div class="grid md:grid-cols-2 gap-3 mt-3">
+          <div><p class="text-xs text-slate-400 mb-1">Request JSON</p><textarea id="b13-req" readonly class="w-full h-40 bg-slate-950 border border-slate-800 rounded-xl p-3"></textarea></div>
+          <div><p class="text-xs text-slate-400 mb-1">Response JSON</p><textarea id="b13-resp" readonly class="w-full h-40 bg-slate-950 border border-slate-800 rounded-xl p-3"></textarea></div>
+        </div>
+      </details>
+    </section>
+
+    <!-- WHAT-IF (multi scenarios) -->
+    <section class="bg-slate-900/60 border border-slate-800 rounded-2xl p-5">
+      <div class="flex items-center justify-between">
+        <h2 class="text-lg font-semibold">4) What-if — nhiều ngữ cảnh <span class="text-slate-400">/api/v1/what-if</span></h2>
+        <div class="flex items-center gap-2">
+          <button id="btn-add-scn" class="px-3 py-2 rounded-lg border border-slate-700 hover:bg-slate-800">➕ Thêm ngữ cảnh</button>
+          <button id="btn-run-scn" class="px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white">Chạy tất cả</button>
+          <span id="whatif-status" class="text-xs px-2 py-1 rounded-full border border-slate-700 text-slate-300">idle</span>
+        </div>
+      </div>
+
+      <!-- Container scenarios -->
+      <div id="scn-wrap" class="mt-4 space-y-3"></div>
+
+      <!-- Chart -->
+      <div class="mt-6">
+        <h3 class="font-semibold mb-2">Biểu đồ so sánh</h3>
+        <canvas id="scnChart" height="140"></canvas>
+      </div>
+
+      <!-- Results table -->
+      <div id="whatif-result" class="mt-4"></div>
+
+      <details class="mt-4">
+        <summary class="cursor-pointer text-emerald-300">JSON request/response (last run)</summary>
+        <div class="grid md:grid-cols-2 gap-3 mt-3">
+          <div><p class="text-xs text-slate-400 mb-1">Request JSON</p><textarea id="whatif-req" readonly class="w-full h-40 bg-slate-950 border border-slate-800 rounded-xl p-3"></textarea></div>
+          <div><p class="text-xs text-slate-400 mb-1">Response JSON</p><textarea id="whatif-resp" readonly class="w-full h-40 bg-slate-950 border border-slate-800 rounded-xl p-3"></textarea></div>
+        </div>
+      </details>
+    </section>
+  </main>
+
+  <script>
+    /* DÙNG CÙNG ORIGIN (Flask/ngrok) */
+    const API = '';
+    const $ = (id)=>document.getElementById(id);
+    const state = { capital:null, ranges:[], overheads_month:null, payback_months:null, lastUnits:{u1:100,u2:300,u3:400}, rangeNames:['Cao cấp','Trung cấp','Phổ thông'] };
+    const num = (v)=>{ if(v===''||v==null) return null; return parseFloat(String(v).replace(/,/g,'').trim()); };
+    const pretty=(o)=>JSON.stringify(o,null,2);
+    const fmtv=(v)=> (v==null||isNaN(v))?'—':Number(v).toLocaleString('vi-VN')+' VND';
+
+    // Debug toggle
+    $('toggle-debug').onclick=()=>{
+      document.body.classList.toggle('debug');
+      $('toggle-debug').textContent = document.body.classList.contains('debug') ? '👁 Debug: ON' : '👁 Debug: OFF';
+    };
+
+    // Fill sample project
+    $('btn-sample-project').onclick=()=>{
+      $('capital').value='100000000'; $('mkt_global').value='15'; $('payback_months').value='12';
+      $('ov_salary').value='20000000'; $('ov_fixed').value='10000000'; $('ov_others').value='5000000';
+      $('r1_name').value='Cao cấp'; $('r1_mix').value='20'; $('r1_price').value='500000'; $('r1_cogs').value='60';
+      $('r2_name').value='Trung cấp'; $('r2_mix').value='50'; $('r2_price').value='300000'; $('r2_cogs').value='55';
+      $('r3_name').value='Phổ thông'; $('r3_mix').value='30'; $('r3_price').value='150000'; $('r3_cogs').value='50';
+    };
+
+    // Render ranges table
+    function renderRangesTable(ranges, mount){
+      let html = `<div class="table-wrap mt-4"><table class="min-w-full text-sm border border-slate-800">
+        <thead class="bg-slate-900"><tr>
+          <th class="text-left p-2">Range</th>
+          <th class="p-2">% Mix</th><th class="p-2">Giá bán</th><th class="p-2">COGS/đv</th>
+          <th class="p-2">MKT/đv</th><th class="p-2">Tổng CP/đv</th><th class="p-2">LN sau MKT/đv</th><th class="p-2">Margin %</th>
+        </tr></thead><tbody>`;
+      for(const r of ranges){
+        html += `<tr class="odd:bg-slate-900/40">
+          <td class="p-2">${r.ten}</td><td class="p-2 text-right">${(+r.ty_le).toFixed(2)}</td>
+          <td class="p-2 text-right">${fmtv(r.gia_ban)}</td><td class="p-2 text-right">${fmtv(r.cogs_per_unit)}</td>
+          <td class="p-2 text-right">${fmtv(r.marketing_per_unit)}</td><td class="p-2 text-right">${fmtv(r.total_cost_per_unit)}</td>
+          <td class="p-2 text-right">${fmtv(r.profit_after_mkt_per_unit)}</td><td class="p-2 text-right">${(+r.margin_after_mkt_pct).toFixed(2)}</td>
+        </tr>`;
+      }
+      html += `</tbody></table></div>`;
+      mount.innerHTML = html;
+    }
+
+    // Project submit
+    $('btn-project').onclick = async ()=>{
+      const body = {
+        capital: num($('capital').value),
+        portfolio: [],
+        ranges: [
+          {ten:$('r1_name').value||'Cao cấp',   ty_le:num($('r1_mix').value), gia_ban:num($('r1_price').value), cogs_pct:num($('r1_cogs').value)},
+          {ten:$('r2_name').value||'Trung cấp', ty_le:num($('r2_mix').value), gia_ban:num($('r2_price').value), cogs_pct:num($('r2_cogs').value)},
+          {ten:$('r3_name').value||'Phổ thông', ty_le:num($('r3_mix').value), gia_ban:num($('r3_price').value), cogs_pct:num($('r3_cogs').value)}
+        ].filter(r=>r.ten && r.ty_le!=null && r.gia_ban!=null && r.cogs_pct!=null),
+        marketing_global_pct: num($('mkt_global').value),
+        overheads: { salary:num($('ov_salary').value), fixed:num($('ov_fixed').value), others:num($('ov_others').value) },
+        payback_months: parseInt(($('payback_months').value||'0'),10)
+      };
+      $('project-status').textContent='sending...'; $('project-req').value = pretty(body);
+      try{
+        const resp = await fetch(`${API}/api/v1/project`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
+        const data = await resp.json(); $('project-resp').value = pretty(data);
+        if(!data.ok) throw new Error(data.error || 'Request error');
+        $('project-status').textContent='ok'; $('project-status').classList.add('text-emerald-400','border-emerald-600');
+        state.capital = body.capital; state.ranges = data.ranges; state.overheads_month = data.overheads.total_per_month; state.payback_months = data.payback_months; state.rangeNames = data.ranges.map(r=>r.ten);
+        renderRangesTable(data.ranges, $('project-result'));
+        ensureAtLeastOneScenario(); // tạo 1 scenario mặc định
+      }catch(e){ $('project-status').textContent='error'; $('project-status').classList.add('text-rose-400','border-rose-600'); $('project-result').innerHTML = `<div class="text-rose-400">⚠️ ${e.message}</div>`; }
+    };
+
+    // B12
+    $('btn-b12').onclick = async ()=>{
+      if(!state.capital || !state.ranges.length){ $('b12-result').innerHTML = `<div class="text-rose-400">⚠️ Hãy chạy Project trước.</div>`; return; }
+      const [n1,n2,n3] = state.rangeNames;
+      const u1 = num($('u1').value) ?? 100, u2 = num($('u2').value) ?? 300, u3 = num($('u3').value) ?? 400;
+      state.lastUnits = {u1,u2,u3};
+      const units={}; if(n1) units[n1]=u1; if(n2) units[n2]=u2; if(n3) units[n3]=u3;
+
+      const body = { capital:state.capital, ranges:state.ranges, overheads_month:state.overheads_month, units_by_range:units };
+      $('b12-status').textContent='sending...'; $('b12-req').value = pretty(body);
+      try{
+        const resp=await fetch(`${API}/api/v1/b12`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+        const data=await resp.json(); $('b12-resp').value = pretty(data);
+        if(!data.ok) throw new Error(data.error || 'Request error');
+        $('b12-status').textContent='ok'; $('b12-status').classList.add('text-emerald-400','border-emerald-600');
+        $('b12-result').innerHTML = `
+          <div class="table-wrap">
+            <table class="min-w-full text-sm border border-slate-800 mt-2">
+              <tbody>
+                <tr><th class="text-left p-2 bg-slate-900">Doanh thu/tháng</th><td class="p-2 text-right">${fmtv(data.doanh_thu_thang)}</td></tr>
+                <tr><th class="text-left p-2 bg-slate-900">LN sau MKT/tháng</th><td class="p-2 text-right">${fmtv(data.ln_sau_mkt_thang)}</td></tr>
+                <tr><th class="text-left p-2 bg-slate-900">Overheads/tháng</th><td class="p-2 text-right">${fmtv(state.overheads_month)}</td></tr>
+                <tr><th class="text-left p-2 bg-slate-900">Dòng tiền ròng/tháng</th><td class="p-2 text-right">${fmtv(data.dong_tien_rong_thang)}</td></tr>
+                <tr><th class="text-left p-2 bg-slate-900">Tháng hoà vốn</th><td class="p-2 text-right">${data.thang_hoa_von ?? '—'}</td></tr>
+              </tbody>
+            </table>
+          </div>`;
+      }catch(e){ $('b12-status').textContent='error'; $('b12-status').classList.add('text-rose-400','border-rose-600'); $('b12-result').innerHTML = `<div class="text-rose-400">⚠️ ${e.message}</div>`; }
+    };
+
+    // B13
+    $('btn-b13').onclick = async ()=>{
+      if(!state.capital || !state.ranges.length){ $('b13-result').innerHTML = `<div class="text-rose-400">⚠️ Hãy chạy Project trước.</div>`; return; }
+      const [n1,n2,n3]=state.rangeNames;
+      const units={}; if(n1) units[n1]=state.lastUnits.u1??100; if(n2) units[n2]=state.lastUnits.u2??300; if(n3) units[n3]=state.lastUnits.u3??400;
+      const body={ capital:state.capital, payback_months:state.payback_months||12, ranges:state.ranges, overheads_month:state.overheads_month, units_by_range:units };
+      $('b13-status').textContent='sending...'; $('b13-req').value = pretty(body);
+      try{
+        const resp=await fetch(`${API}/api/v1/b13`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+        const data=await resp.json(); $('b13-resp').value=pretty(data);
+        if(!data.ok) throw new Error(data.error || 'Request error');
+        $('b13-status').textContent='ok'; $('b13-status').classList.add('text-emerald-400','border-emerald-600');
+        const A=data.A,B=data.B;
+        const block=(title,obj)=> obj?`
+          <div class="mt-3">
+            <h3 class="font-semibold mb-2">${title}</h3>
+            <div class="table-wrap"><table class="min-w-full text-sm border border-slate-800">
+              <tbody>
+                <tr><th class="text-left p-2 bg-slate-900">Mục tiêu LN/tháng</th><td class="p-2 text-right">${fmtv(obj.target_ln)}</td></tr>
+                <tr><th class="text-left p-2 bg-slate-900">Khoảng thiếu LN/tháng</th><td class="p-2 text-right">${fmtv(obj.gap_ln)}</td></tr>
+                <tr><th class="text-left p-2 bg-slate-900">Đơn vị composite cần bổ sung</th><td class="p-2 text-right">${(+obj.units_bo_sung).toFixed(2)}</td></tr>
+                ${obj.chi_tiet&&obj.chi_tiet.length?`<tr><th class="text-left p-2 bg-slate-900">Phân bổ theo range</th><td class="p-2">${obj.chi_tiet.map(it=>`<div>• ${it.ten}: +${(+it.units_bo_sung).toFixed(2)} đv/tháng</div>`).join('')}</td></tr>`:''}
+              </tbody>
+            </table></div>
+          </div>`:'';
+        $('b13-result').innerHTML = block('[A] Hoà vốn tháng',A)+(B?block('[B] Hoàn vốn theo kế hoạch',B):'');
+      }catch(e){ $('b13-status').textContent='error'; $('b13-status').classList.add('text-rose-400','border-rose-600'); $('b13-result').innerHTML = `<div class="text-rose-400">⚠️ ${e.message}</div>`; }
+    };
+
+    /* ============ WHAT-IF (multi scenarios + chart) ============ */
+    const scnWrap = $('scn-wrap');
+    let scnIdSeq = 0;
+    function scenarioCard(name='Kịch bản', init={}){
+      const id = ++scnIdSeq;
+      const el = document.createElement('div');
+      el.className = 'border border-slate-800 rounded-xl p-4';
+      el.innerHTML = `
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center gap-2">
+            <input data-k="name" class="bg-slate-950 border border-slate-800 rounded-lg px-3 py-2" placeholder="Tên ngữ cảnh" value="${name} ${id}">
+            <span class="text-slate-400 text-sm">(để trống các ô không muốn đổi)</span>
+          </div>
+          <button class="px-3 py-2 rounded-lg border border-slate-700 hover:bg-slate-800" data-action="remove">🗑 Xoá</button>
+        </div>
+        <div class="mt-3 grid md:grid-cols-3 gap-3">
+          <div><label class="block text-xs text-slate-400 mb-1">%MKT GLOBAL</label><input data-k="mkt" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2" placeholder=""></div>
+          <div><label class="block text-xs text-slate-400 mb-1">Overheads/tháng</label><input data-k="ovh" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2" placeholder=""></div>
+          <div><label class="block text-xs text-slate-400 mb-1">Payback months</label><input data-k="payback" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2" placeholder=""></div>
+        </div>
+        <div class="mt-3 grid md:grid-cols-3 gap-3">
+          <div><label class="block text-xs text-slate-400 mb-1">Units — ${state.rangeNames[0]||'R1'}</label><input data-k="u1" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2" placeholder=""></div>
+          <div><label class="block text-xs text-slate-400 mb-1">Units — ${state.rangeNames[1]||'R2'}</label><input data-k="u2" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2" placeholder=""></div>
+          <div><label class="block text-xs text-slate-400 mb-1">Units — ${state.rangeNames[2]||'R3'}</label><input data-k="u3" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2" placeholder=""></div>
+        </div>`;
+      el.querySelector('[data-action="remove"]').onclick = ()=> el.remove();
+      Object.entries(init).forEach(([k,v])=>{
+        const inp = el.querySelector(`[data-k="${k}"]`);
+        if (inp) inp.value = v;
+      });
+      scnWrap.appendChild(el);
+    }
+    function ensureAtLeastOneScenario(){
+      if (!scnWrap.children.length) scenarioCard('Kịch bản', {name:'Cơ sở', u1:100, u2:300, u3:400});
+    }
+    $('btn-add-scn').onclick = ()=> scenarioCard('Kịch bản');
+
+    let chart; // Chart.js instance
+    function renderChart(labels, monthsArr, revArr, cfArr){
+      const ctx = document.getElementById('scnChart').getContext('2d');
+      if (chart) chart.destroy();
+      chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [
+            { label: 'Tháng hoà vốn', data: monthsArr, yAxisID: 'yMonths' },
+            { label: 'Doanh thu/tháng (VND)', data: revArr, yAxisID: 'yMoney' },
+            { label: 'Dòng tiền ròng/tháng (VND)', data: cfArr, yAxisID: 'yMoney' }
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { position: 'top' } },
+          scales: {
+            yMonths: { position: 'left', title:{display:true,text:'Tháng'}, beginAtZero:true },
+            yMoney:  { position: 'right', title:{display:true,text:'VND'}, beginAtZero:true, grid:{drawOnChartArea:false} }
+          }
+        }
+      });
+    }
+
+    $('btn-run-scn').onclick = async ()=>{
+      $('whatif-status').textContent='sending...';
+      if(!state.capital || !state.ranges.length){ $('whatif-status').textContent='error'; return; }
+
+      const cards = [...scnWrap.children];
+      if (!cards.length) { ensureAtLeastOneScenario(); return; }
+
+      const labels=[], monthsArr=[], revArr=[], cfArr=[];
+      let lastReq = null, lastResp = null;
+
+      for (const card of cards){
+        const get = (k)=> card.querySelector(`[data-k="${k}"]`)?.value ?? '';
+        const name = get('name') || `Scn ${labels.length+1}`;
+        const mkt  = num(get('mkt'));
+        const ovh  = num(get('ovh'));
+        const pbo  = num(get('payback'));
+        const u1   = num(get('u1')), u2 = num(get('u2')), u3 = num(get('u3'));
+
+        const units_by_range = {};
+        if (state.rangeNames[0] && u1!=null) units_by_range[state.rangeNames[0]] = u1;
+        if (state.rangeNames[1] && u2!=null) units_by_range[state.rangeNames[1]] = u2;
+        if (state.rangeNames[2] && u3!=null) units_by_range[state.rangeNames[2]] = u3;
+
+        const body = {
+          capital: state.capital,
+          payback_months: state.payback_months || 12,
+          ranges: state.ranges,
+          overheads_month: state.overheads_month,
+          marketing_global_pct: mkt ?? undefined,
+          overheads_month_override: ovh ?? undefined,
+          payback_months_override: pbo ?? undefined,
+          units_by_range
+        };
+        const clean = JSON.parse(JSON.stringify(body));
+        lastReq = clean;
+        $('whatif-req').value = pretty(clean);
+
+        try{
+          const resp = await fetch(`${API}/api/v1/what-if`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(clean)});
+          const data = await resp.json();
+          lastResp = data;
+          $('whatif-resp').value = pretty(data);
+          if(!data.ok) throw new Error(data.error || 'Request error');
+
+          labels.push(name);
+          monthsArr.push(data.b12.thang_hoa_von ?? null);
+          revArr.push(+data.b12.doanh_thu_thang || 0);
+          cfArr.push(+data.b12.dong_tien_rong_thang || 0);
+        }catch(e){
+          $('whatif-status').textContent='error';
+          document.getElementById('whatif-result').innerHTML = `<div class="text-rose-400">⚠️ ${name}: ${e.message}</div>`;
+          return;
+        }
+      }
+
+      renderChart(labels, monthsArr, revArr, cfArr);
+      $('whatif-status').textContent='ok';
+      $('whatif-status').classList.add('text-emerald-400','border-emerald-600');
+
+      let html = `<div class="table-wrap"><table class="min-w-full text-sm border border-slate-800 mt-3"><thead class="bg-slate-900">
+        <tr><th class="text-left p-2">Ngữ cảnh</th><th class="p-2">Tháng hoà vốn</th><th class="p-2">Doanh thu/tháng</th><th class="p-2">Dòng tiền ròng/tháng</th></tr>
+      </thead><tbody>`;
+      labels.forEach((lb, i)=>{
+        html += `<tr class="odd:bg-slate-900/40"><td class="p-2">${lb}</td><td class="p-2 text-right">${monthsArr[i] ?? '—'}</td><td class="p-2 text-right">${fmtv(revArr[i])}</td><td class="p-2 text-right">${fmtv(cfArr[i])}</td></tr>`;
+      });
+      html += `</tbody></table></div>`;
+      document.getElementById('whatif-result').innerHTML = html;
+    };
+
+    function onReady(){ /* noop */ }
+    document.addEventListener('DOMContentLoaded', onReady);
+  </script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+# --- Core web framework ---
+flask==3.0.3
+flask-cors==4.0.0
+
+# --- Ngrok (tùy chọn: chỉ cần nếu bạn chạy tunnel trực tiếp trong Python) ---
+pyngrok==7.1.6
+
+# --- Utility / math (nếu cần cho future analytics) ---
+numpy==1.26.4
+
+# --- (Optional) production WSGI server ---
+waitress==3.0.0
